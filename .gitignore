@@ -1,0 +1,11 @@
+# User configuration, downloaded clips, and generated results
+config/user.json
+config/user.json.pending
+media/
+work/
+results/
+
+# Locally supplied binaries; release packaging will include selected builds.
+operations/bin/*.exe
+operations/bin/plex/*.exe
+operations/bin/plex/*.dll
