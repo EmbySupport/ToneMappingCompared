@@ -1,0 +1,1002 @@
+{
+  "schemaVersion": 1,
+  "referenceImplementationId": "stock-libplacebo",
+  "analysisSource": "stock",
+  "toneMappingTypes": [
+    {
+      "id": "hlg",
+      "label": "HLG"
+    },
+    {
+      "id": "hdr10",
+      "label": "HDR10"
+    },
+    {
+      "id": "hdr10plus",
+      "label": "HDR10+"
+    },
+    {
+      "id": "dovi-p5",
+      "label": "Dolby Vision Profile 5"
+    }
+  ],
+  "testTypes": [
+    {
+      "id": "performance-isolated",
+      "label": "Performance: Isolated"
+    },
+    {
+      "id": "performance-transcode",
+      "label": "Performance: Full Transcode"
+    },
+    {
+      "id": "quality",
+      "label": "Quality"
+    }
+  ],
+  "hardwareTypes": [
+    {
+      "id": "software",
+      "label": "Software"
+    },
+    {
+      "id": "opencl",
+      "label": "OpenCL"
+    },
+    {
+      "id": "cuda",
+      "label": "CUDA"
+    },
+    {
+      "id": "vulkan",
+      "label": "Vulkan"
+    }
+  ],
+  "sources": [
+    {
+      "id": "stock",
+      "label": "Stock FFmpeg"
+    },
+    {
+      "id": "emby",
+      "label": "Emby FFmpeg"
+    },
+    {
+      "id": "jellyfin",
+      "label": "Jellyfin FFmpeg"
+    },
+    {
+      "id": "plex",
+      "label": "Plex Transcoder"
+    }
+  ],
+  "rules": {
+    "qualityReferenceFirst": true,
+    "qualityNativeResolution": true,
+    "qualityOutput": "First 30 keyframes after tone mapping; retain every third (3, 6, ... 30), as consecutively numbered native PNGs.",
+    "transcodeHeight": 720,
+    "transcodeToneMapBeforeScale": true,
+    "isolatedInput": "Decode one original frame with side data; upload once before looping GPU frames for hardware filters; use wrapped_avframe to the null muxer, with no download or pixel encoding.",
+    "unsupportedMetadata": "N/A; no speed or quality score when the implementation ignores the selected signal's metadata.",
+    "runtimeProof": "Filter inventories and filter help do not prove GPU/device/driver executability or metadata delivery."
+  },
+  "implementations": [
+    {
+      "id": "stock-libplacebo",
+      "label": "libplacebo (reference)",
+      "source": "stock",
+      "filter": "libplacebo",
+      "backend": "vulkan",
+      "toneMappingTypes": [
+        "hlg",
+        "hdr10",
+        "hdr10plus",
+        "dovi-p5"
+      ],
+      "testTypes": [
+        "quality"
+      ],
+      "requiredFilters": [
+        "libplacebo",
+        "format"
+      ],
+      "deviceVendors": [
+        "intel",
+        "amd",
+        "nvidia"
+      ],
+      "isReference": true,
+      "filterOptions": {
+        "format": "nv12",
+        "peak_detect": 0,
+        "dithering": "none",
+        "colorspace": "bt709",
+        "color_primaries": "bt709",
+        "color_trc": "bt709",
+        "range": "tv",
+        "contrast_recovery": 0,
+        "tonemapping": "bt.2390",
+        "apply_dolbyvision": 0
+      },
+      "toneMappingOptions": {
+        "hdr10plus": {
+          "tonemapping": "st2094-40"
+        },
+        "dovi-p5": {
+          "apply_dolbyvision": 1
+        }
+      },
+      "notes": "Fixed Quality reference from stock FFmpeg, excluded from performance comparisons. Performance libplacebo is the separate Emby-build entry. HDR10+ applicability follows the primary instructions; absence of an apply_hdr10p option is not proof of absent libplacebo HDR10+ processing. Metadata delivery requires native preflight on the original clips.",
+      "supportedCurves": [
+        "bt2390",
+        "spline",
+        "bt2446a",
+        "hable",
+        "mobius",
+        "reinhard",
+        "st2094-40",
+        "st2094-10"
+      ]
+    },
+    {
+      "id": "emby-libplacebo",
+      "label": "libplacebo",
+      "source": "emby",
+      "filter": "libplacebo",
+      "backend": "vulkan",
+      "toneMappingTypes": [
+        "hlg",
+        "hdr10",
+        "hdr10plus",
+        "dovi-p5"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode"
+      ],
+      "requiredFilters": [
+        "libplacebo",
+        "format"
+      ],
+      "deviceVendors": [
+        "intel",
+        "amd",
+        "nvidia"
+      ],
+      "isReference": false,
+      "filterOptions": {
+        "format": "nv12",
+        "peak_detect": 0,
+        "dithering": "none",
+        "colorspace": "bt709",
+        "color_primaries": "bt709",
+        "color_trc": "bt709",
+        "range": "tv",
+        "contrast_recovery": 0,
+        "tonemapping": "bt.2390",
+        "apply_dolbyvision": 0
+      },
+      "toneMappingOptions": {
+        "hdr10plus": {
+          "tonemapping": "st2094-40"
+        },
+        "dovi-p5": {
+          "apply_dolbyvision": 1
+        }
+      },
+      "notes": "Performance-only libplacebo from the configured Emby development FFmpeg, paired with embytonemap_vulkan using the same binary and selected GPU. Quality retains its separate stock-libplacebo reference. Options and eight comparison curves match the stock catalog entry; native binary/device/residency preflight remains mandatory.",
+      "supportedCurves": [
+        "bt2390",
+        "spline",
+        "bt2446a",
+        "hable",
+        "mobius",
+        "reinhard",
+        "st2094-40",
+        "st2094-10"
+      ]
+    },
+    {
+      "id": "stock-swscale",
+      "label": "swscale perceptual",
+      "source": "stock",
+      "filter": "scale",
+      "backend": "software",
+      "toneMappingTypes": [
+        "hlg",
+        "hdr10"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "scale",
+        "format"
+      ],
+      "deviceVendors": [],
+      "filterOptions": {
+        "out_color_matrix": "bt709",
+        "out_primaries": "bt709",
+        "out_transfer": "bt709",
+        "out_range": "limited",
+        "intent": "perceptual"
+      },
+      "notes": "swscale is the library; its FFmpeg filter is scale. The supplied build exposes perceptual HDR conversion, PQ and HLG transfers. HDR10 synthetic processing was tested locally. Dynamic HDR10+ mapping and DV P5 reshaping are not established, so those cases are N/A. Quality execution must retain native dimensions. For HDR10 Quality, include its native perceptual conversion in Spline comparisons without adding a curve option.",
+      "supportedCurves": [
+        "spline"
+      ]
+    },
+    {
+      "id": "stock-tonemap",
+      "label": "tonemap (zscale linear input)",
+      "source": "stock",
+      "filter": "tonemap",
+      "backend": "software",
+      "toneMappingTypes": [
+        "hdr10"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "zscale",
+        "tonemap",
+        "format"
+      ],
+      "deviceVendors": [],
+      "filterOptions": {
+        "tonemap": "hable",
+        "desat": 0
+      },
+      "notes": "Needs linear float input from zscale and an SDR conversion afterwards; no BT.2390 option.",
+      "supportedCurves": [
+        "hable",
+        "mobius",
+        "reinhard"
+      ]
+    },
+    {
+      "id": "stock-tonemap-opencl",
+      "label": "tonemap_opencl",
+      "source": "stock",
+      "filter": "tonemap_opencl",
+      "backend": "opencl",
+      "toneMappingTypes": [
+        "hdr10"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "tonemap_opencl",
+        "format",
+        "hwupload",
+        "hwdownload"
+      ],
+      "deviceVendors": [
+        "intel",
+        "amd",
+        "nvidia"
+      ],
+      "filterOptions": {
+        "tonemap": "hable",
+        "format": "nv12",
+        "range": "tv",
+        "transfer": "bt709",
+        "matrix": "bt709",
+        "primaries": "bt709"
+      },
+      "notes": "Operators up to mobius only; no BT.2390, ST.2094 or HDR10+ options.",
+      "supportedCurves": [
+        "hable",
+        "mobius",
+        "reinhard"
+      ]
+    },
+    {
+      "id": "emby-embytonemap-high",
+      "label": "embytonemap (high)",
+      "source": "emby",
+      "filter": "embytonemap",
+      "backend": "software",
+      "variant": "high",
+      "toneMappingTypes": [
+        "hlg",
+        "hdr10",
+        "hdr10plus",
+        "dovi-p5"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "embytonemap",
+        "format"
+      ],
+      "deviceVendors": [],
+      "filterOptions": {
+        "tonemap": "bt2390",
+        "quality": "high",
+        "range": "tv",
+        "apply_dovi": 0,
+        "apply_hdr10p": 0
+      },
+      "toneMappingOptions": {
+        "hdr10plus": {
+          "tonemap": "st2094-40",
+          "apply_hdr10p": 1
+        },
+        "dovi-p5": {
+          "apply_dovi": 1
+        }
+      },
+      "notes": "Supported signals are HLG, HDR10, HDR10+ and Dolby Vision P5. Native decoded input and native NV12 output need no format wrappers. Signal-specific metadata application flags are enabled only for the corresponding source. High is the quality-oriented mode.",
+      "supportedCurves": [
+        "bt2390",
+        "spline",
+        "bt2446a",
+        "hable",
+        "mobius",
+        "reinhard",
+        "st2094-40",
+        "st2094-10"
+      ]
+    },
+    {
+      "id": "emby-embytonemap-fast",
+      "label": "embytonemap (fast)",
+      "source": "emby",
+      "filter": "embytonemap",
+      "backend": "software",
+      "variant": "fast",
+      "toneMappingTypes": [
+        "hlg",
+        "hdr10",
+        "hdr10plus",
+        "dovi-p5"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "embytonemap",
+        "format"
+      ],
+      "deviceVendors": [],
+      "filterOptions": {
+        "tonemap": "bt2390",
+        "quality": "fast",
+        "range": "tv",
+        "apply_dovi": 0,
+        "apply_hdr10p": 0
+      },
+      "toneMappingOptions": {
+        "hdr10plus": {
+          "tonemap": "st2094-40",
+          "apply_hdr10p": 1
+        },
+        "dovi-p5": {
+          "apply_dovi": 1
+        }
+      },
+      "notes": "Supported signals are HLG, HDR10, HDR10+ and Dolby Vision P5. Native decoded input and native NV12 output need no format wrappers. Signal-specific metadata application flags are enabled only for the corresponding source. Fast uses the quality=fast option.",
+      "supportedCurves": [
+        "bt2390",
+        "spline",
+        "bt2446a",
+        "hable",
+        "mobius",
+        "reinhard",
+        "st2094-40",
+        "st2094-10"
+      ]
+    },
+    {
+      "id": "emby-embytonemap-cuda",
+      "label": "embytonemap_cuda",
+      "source": "emby",
+      "filter": "embytonemap_cuda",
+      "backend": "cuda",
+      "toneMappingTypes": [
+        "hlg",
+        "hdr10",
+        "hdr10plus",
+        "dovi-p5"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "embytonemap_cuda",
+        "format",
+        "hwupload_cuda",
+        "hwdownload"
+      ],
+      "deviceVendors": [
+        "nvidia"
+      ],
+      "filterOptions": {
+        "tonemap": "bt2390",
+        "format": "nv12",
+        "range": "tv",
+        "apply_dovi": 0,
+        "apply_hdr10p": 0
+      },
+      "toneMappingOptions": {
+        "hdr10plus": {
+          "tonemap": "st2094-40",
+          "apply_hdr10p": 1
+        },
+        "dovi-p5": {
+          "apply_dovi": 1
+        }
+      },
+      "notes": "Replacement Emby 8.0-emby_2026_10_02 CUDA preflights passed isolated, full hardware transcode and native-quality export on all five enabled clips. HDR10+ and Dolby Vision P5 logs report native metadata application. Runtime checks validate ordinary SDR stream summaries and GPU residency; individual frame metadata delivery is not observed.",
+      "supportedCurves": [
+        "bt2390",
+        "spline",
+        "bt2446a",
+        "hable",
+        "mobius",
+        "reinhard",
+        "st2094-40",
+        "st2094-10"
+      ]
+    },
+    {
+      "id": "emby-embytonemap-opencl",
+      "label": "embytonemap_opencl",
+      "source": "emby",
+      "filter": "embytonemap_opencl",
+      "backend": "opencl",
+      "toneMappingTypes": [
+        "hlg",
+        "hdr10",
+        "hdr10plus",
+        "dovi-p5"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "embytonemap_opencl",
+        "format",
+        "hwupload",
+        "hwdownload"
+      ],
+      "deviceVendors": [
+        "intel",
+        "amd",
+        "nvidia"
+      ],
+      "filterOptions": {
+        "tonemap": "bt2390",
+        "format": "nv12",
+        "range": "tv",
+        "apply_dovi": 0,
+        "apply_hdr10p": 0
+      },
+      "toneMappingOptions": {
+        "hdr10plus": {
+          "tonemap": "st2094-40",
+          "apply_hdr10p": 1
+        },
+        "dovi-p5": {
+          "apply_dovi": 1
+        }
+      },
+      "notes": "New OpenCL implementation. Configured vendor/device must be checked against the actual OpenCL device and exclusions before execution. GPU execution unverified.",
+      "supportedCurves": [
+        "bt2390",
+        "spline",
+        "bt2446a",
+        "hable",
+        "mobius",
+        "reinhard",
+        "st2094-40",
+        "st2094-10"
+      ]
+    },
+    {
+      "id": "emby-embytonemap-vulkan",
+      "label": "embytonemap_vulkan",
+      "source": "emby",
+      "filter": "embytonemap_vulkan",
+      "backend": "vulkan",
+      "toneMappingTypes": [
+        "hlg",
+        "hdr10",
+        "hdr10plus",
+        "dovi-p5"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "embytonemap_vulkan",
+        "format",
+        "hwupload",
+        "hwdownload"
+      ],
+      "deviceVendors": [
+        "intel",
+        "amd",
+        "nvidia"
+      ],
+      "isReference": false,
+      "filterOptions": {
+        "tonemap": "bt2390",
+        "format": "nv12",
+        "transfer": "bt709",
+        "matrix": "bt709",
+        "primaries": "bt709",
+        "range": "tv",
+        "apply_dovi": 0,
+        "apply_hdr10p": 0
+      },
+      "toneMappingOptions": {
+        "hdr10plus": {
+          "tonemap": "st2094-40",
+          "apply_hdr10p": 1
+        },
+        "dovi-p5": {
+          "apply_dovi": 1
+        }
+      },
+      "notes": "Development Emby filter help declares Vulkan frames in/out and all eight comparison curves. Source configuration requires P010 input and NV12 output surfaces. Output format, BT.709 transfer/matrix/primaries and TV range are explicit; metadata flags are enabled only for the matching signal. It has no quality option. Help-listed capability does not establish hardware decode, mapping, scaling or encoding success; each configured binary/device route must pass native preflight.",
+      "supportedCurves": [
+        "bt2390",
+        "spline",
+        "bt2446a",
+        "hable",
+        "mobius",
+        "reinhard",
+        "st2094-40",
+        "st2094-10"
+      ]
+    },
+    {
+      "id": "emby-supertonemap",
+      "label": "supertonemap",
+      "source": "emby",
+      "filter": "supertonemap",
+      "backend": "software",
+      "toneMappingTypes": [
+        "hdr10"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "supertonemap",
+        "format"
+      ],
+      "deviceVendors": [],
+      "filterOptions": {
+        "tonemap": "bt2390"
+      },
+      "notes": "Previous SIMD implementation; help confirms bt2390 in this supplied build. Use p010le input and nv12 output; no documented dynamic HDR10+ or DV P5 path.",
+      "supportedCurves": [
+        "hable",
+        "mobius",
+        "reinhard",
+        "bt2390"
+      ]
+    },
+    {
+      "id": "emby-extratonemap-opencl",
+      "label": "extratonemap_opencl",
+      "source": "emby",
+      "filter": "extratonemap_opencl",
+      "backend": "opencl",
+      "toneMappingTypes": [
+        "hdr10"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "extratonemap_opencl",
+        "format",
+        "hwupload",
+        "hwdownload"
+      ],
+      "deviceVendors": [
+        "intel"
+      ],
+      "filterOptions": {
+        "tonemap": "hable",
+        "format": "nv12",
+        "range": "tv",
+        "transfer": "bt709",
+        "matrix": "bt709",
+        "primaries": "bt709"
+      },
+      "notes": "Previous Intel-only OpenCL path. No bt2390 option in the supplied filter help. Requires a confirmed Intel OpenCL device; no dynamic HDR10+ or DV P5 path.",
+      "supportedCurves": [
+        "hable",
+        "mobius",
+        "reinhard"
+      ]
+    },
+    {
+      "id": "emby-supertonemap-opencl",
+      "label": "supertonemap_opencl",
+      "source": "emby",
+      "filter": "supertonemap_opencl",
+      "backend": "opencl",
+      "toneMappingTypes": [
+        "hdr10"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "supertonemap_opencl",
+        "format",
+        "setparams",
+        "hwupload",
+        "hwdownload",
+        "vpp_qsv",
+        "hwmap"
+      ],
+      "deviceVendors": [
+        "intel"
+      ],
+      "filterOptions": {
+        "tonemap": "hable",
+        "format": "bgra",
+        "range": "tv"
+      },
+      "notes": "Previous Intel-only legacy path. Input and output are BGRA. Isolated converts to BGRA in software and restores the BT.2020 matrix tag that the filter asserts; Full Transcode converts to BGRA with vpp_qsv on the GPU before mapping to OpenCL. No dynamic HDR10+ or DV P5 path.",
+      "supportedCurves": [
+        "hable",
+        "mobius",
+        "reinhard"
+      ]
+    },
+    {
+      "id": "emby-tonemap-cuda",
+      "label": "tonemap_cuda (previous)",
+      "source": "emby",
+      "filter": "tonemap_cuda",
+      "backend": "cuda",
+      "toneMappingTypes": [
+        "hdr10"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "tonemap_cuda",
+        "format",
+        "hwupload_cuda",
+        "hwdownload"
+      ],
+      "deviceVendors": [
+        "nvidia"
+      ],
+      "filterOptions": {
+        "tonemap": "hable",
+        "format": "nv12"
+      },
+      "notes": "Previous CUDA implementation; no Dolby Vision or HDR10+ options.",
+      "supportedCurves": [
+        "hable",
+        "mobius",
+        "reinhard"
+      ]
+    },
+    {
+      "id": "jellyfin-tonemapx",
+      "label": "tonemapx",
+      "source": "jellyfin",
+      "filter": "tonemapx",
+      "backend": "software",
+      "toneMappingTypes": [
+        "hlg",
+        "hdr10",
+        "dovi-p5"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "tonemapx",
+        "format"
+      ],
+      "deviceVendors": [],
+      "filterOptions": {
+        "tonemap": "bt2390",
+        "format": "yuv420p",
+        "range": "tv",
+        "apply_dovi": 0,
+        "peak": 100
+      },
+      "notes": "The supplied Jellyfin 8.1.2 family implements HLG, HDR10 and Dolby Vision P5. Native Windows software/OpenCL/CUDA probes passed all three test modes on the HLG clip. No dynamic HDR10+ control or ST2094-40 operator is exposed. Mapper peak=100 follows Jellyfin Server v12.1 production defaults; scaling remains after mapping for this benchmark. Native output format is selected by the mapper; CUDA NV12 is the declared common hardware output choice.",
+      "toneMappingOptions": {
+        "dovi-p5": {
+          "apply_dovi": 1
+        }
+      },
+      "supportedCurves": [
+        "hable",
+        "mobius",
+        "reinhard",
+        "bt2390"
+      ]
+    },
+    {
+      "id": "jellyfin-tonemap-opencl",
+      "label": "tonemap_opencl",
+      "source": "jellyfin",
+      "filter": "tonemap_opencl",
+      "backend": "opencl",
+      "toneMappingTypes": [
+        "hlg",
+        "hdr10",
+        "dovi-p5"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "tonemap_opencl",
+        "format",
+        "hwupload",
+        "hwdownload"
+      ],
+      "deviceVendors": [
+        "intel",
+        "amd",
+        "nvidia"
+      ],
+      "filterOptions": {
+        "tonemap": "bt2390",
+        "format": "nv12",
+        "range": "tv",
+        "apply_dovi": 0,
+        "peak": 100
+      },
+      "notes": "The supplied Jellyfin 8.1.2 family implements HLG, HDR10 and Dolby Vision P5. Native Windows software/OpenCL/CUDA probes passed all three test modes on the HLG clip. No dynamic HDR10+ control or ST2094-40 operator is exposed. Mapper peak=100 follows Jellyfin Server v12.1 production defaults; scaling remains after mapping for this benchmark. Native output format is selected by the mapper; CUDA NV12 is the declared common hardware output choice.",
+      "toneMappingOptions": {
+        "dovi-p5": {
+          "apply_dovi": 1
+        }
+      },
+      "supportedCurves": [
+        "hable",
+        "mobius",
+        "reinhard",
+        "bt2390"
+      ]
+    },
+    {
+      "id": "jellyfin-tonemap-cuda",
+      "label": "tonemap_cuda",
+      "source": "jellyfin",
+      "filter": "tonemap_cuda",
+      "backend": "cuda",
+      "toneMappingTypes": [
+        "hlg",
+        "hdr10",
+        "dovi-p5"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "tonemap_cuda",
+        "format",
+        "hwupload_cuda",
+        "hwdownload"
+      ],
+      "deviceVendors": [
+        "nvidia"
+      ],
+      "filterOptions": {
+        "tonemap": "bt2390",
+        "format": "nv12",
+        "range": "tv",
+        "apply_dovi": 0,
+        "peak": 100
+      },
+      "notes": "The supplied Jellyfin 8.1.2 family implements HLG, HDR10 and Dolby Vision P5. Native Windows software/OpenCL/CUDA probes passed all three test modes on the HLG clip. No dynamic HDR10+ control or ST2094-40 operator is exposed. Mapper peak=100 follows Jellyfin Server v12.1 production defaults; scaling remains after mapping for this benchmark. Native output format is selected by the mapper; CUDA NV12 is the declared common hardware output choice.",
+      "toneMappingOptions": {
+        "dovi-p5": {
+          "apply_dovi": 1
+        }
+      },
+      "supportedCurves": [
+        "hable",
+        "mobius",
+        "reinhard",
+        "bt2390"
+      ]
+    },
+    {
+      "id": "plex-tonemap",
+      "label": "tonemap (Plex PQ)",
+      "source": "plex",
+      "filter": "tonemap",
+      "backend": "software",
+      "toneMappingTypes": [
+        "hdr10"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "tonemap",
+        "format"
+      ],
+      "deviceVendors": [],
+      "filterOptions": {
+        "tonemap": "hable"
+      },
+      "notes": "HDR10 interface and matching external HEVC/H.264/x264 modules verified against official Plex codec metadata. Original 4K HEVC decode succeeds. Each software/CUDA route still requires a runtime preflight with native SDR output and GPU residency. This Plex build cannot export execution graph HTML. Plex Media Server runs this filter as format=p010,tonemap=hable without hardware acceleration and with Intel QSV, where D3D11VA decodes into system memory and h264_qsv encodes. It also runs it for HLG and HDR10+, but applies no HDR10+ metadata and does not decode HLG correctly, so only HDR10 is compared. DV P5 is not supported.",
+      "supportedCurves": [
+        "hable",
+        "mobius",
+        "reinhard",
+        "bt2390"
+      ]
+    },
+    {
+      "id": "plex-tonemap-cuda",
+      "label": "tonemap_cuda",
+      "source": "plex",
+      "filter": "tonemap_cuda",
+      "backend": "cuda",
+      "toneMappingTypes": [
+        "hdr10"
+      ],
+      "testTypes": [
+        "performance-isolated",
+        "performance-transcode",
+        "quality"
+      ],
+      "requiredFilters": [
+        "tonemap_cuda",
+        "format",
+        "hwupload_cuda",
+        "hwdownload"
+      ],
+      "deviceVendors": [
+        "nvidia"
+      ],
+      "filterOptions": {
+        "tonemap": "hable",
+        "format": "nv12"
+      },
+      "notes": "HDR10 interface and matching external HEVC/H.264/x264 modules verified against official Plex codec metadata. Original 4K HEVC decode succeeds. Each software/CUDA route still requires a runtime preflight with native SDR output and GPU residency. This Plex build cannot export execution graph HTML. Plex Media Server also runs tonemap_cuda=hable:nv12 for HLG and HDR10+, but applies no HDR10+ metadata and does not decode HLG correctly, so only HDR10 is compared. DV P5 is not supported.",
+      "supportedCurves": [
+        "hable",
+        "mobius",
+        "reinhard"
+      ]
+    }
+  ],
+  "omitted": [
+    {
+      "source": "stock",
+      "filter": "tonemap_cuda",
+      "reason": "Absent in the supplied stock inventory; filter help reports Unknown filter."
+    },
+    {
+      "source": "emby",
+      "filter": "tonemap",
+      "reason": "The ordinary linear-float upstream path requires a conversion pipeline; zscale is absent in the supplied Emby binary. No substitute was validated."
+    },
+    {
+      "source": "jellyfin",
+      "filter": "tonemap_d3d11",
+      "reason": "Present, but D3D11 is outside the four requested backend dimensions for the first phase."
+    },
+    {
+      "source": "all",
+      "filter": "vpp_qsv / vpp_amf / tonemap_vaapi",
+      "reason": "The primary appendix lists these, but QSV, AMF, and VAAPI are outside the requested backend dimensions for the first phase."
+    },
+    {
+      "source": "emby / jellyfin",
+      "filter": "libplacebo",
+      "reason": "Present in both inventories. This initial catalog fixes stock libplacebo as the single quality reference; adding build variants later must preserve separate identities."
+    }
+  ],
+  "curves": [
+    {
+      "id": "bt2390",
+      "label": "BT.2390"
+    },
+    {
+      "id": "spline",
+      "label": "Spline"
+    },
+    {
+      "id": "bt2446a",
+      "label": "BT.2446a"
+    },
+    {
+      "id": "hable",
+      "label": "Hable"
+    },
+    {
+      "id": "mobius",
+      "label": "Mobius"
+    },
+    {
+      "id": "reinhard",
+      "label": "Reinhard"
+    },
+    {
+      "id": "st2094-40",
+      "label": "ST 2094-40"
+    },
+    {
+      "id": "st2094-10",
+      "label": "ST 2094-10"
+    }
+  ],
+  "qualityProfiles": [
+    {
+      "toneMappingType": "hdr10",
+      "curves": [
+        "hable",
+        "spline",
+        "bt2390"
+      ]
+    },
+    {
+      "toneMappingType": "hdr10plus",
+      "curves": [
+        "st2094-40"
+      ]
+    },
+    {
+      "toneMappingType": "hlg",
+      "curves": [
+        "bt2390"
+      ]
+    },
+    {
+      "toneMappingType": "dovi-p5",
+      "curves": [
+        "bt2390",
+        "st2094-10"
+      ]
+    }
+  ]
+}

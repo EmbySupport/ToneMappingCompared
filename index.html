@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8f9">
+  <title>Tone Mapping Compared</title>
+  <link rel="stylesheet" href="viewer/style.css">
+</head>
+<body>
+  <a id="skip-to-comparisons" class="skip-link" href="#comparison-controls">Skip to comparisons</a>
+  <header class="site-header">
+    <nav class="nav shell" aria-label="Primary navigation">
+      <a id="viewer-home" class="brand" href="#viewer-main" aria-label="Tone Mapping Compared results"><span class="brand-title">Tone Mapping <strong>Compared</strong></span></a>
+      <div class="nav-links"><button id="show-results" class="active" type="button">Results</button><button id="show-configuration" type="button">Configuration</button></div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode"><span aria-hidden="true">☾</span></button>
+    </nav>
+  </header>
+  <main id="viewer-main">
+    <div id="results-page" class="shell comparison-content">
+    <section id="comparison-controls" class="controls" aria-label="Comparison selection">
+      <label>Comparison<select id="test"></select></label>
+      <label>Tone Mapping Type<select id="signal"></select></label>
+      <label id="curve-control" hidden>Curve<select id="curve"></select></label>
+      <label>Processing<select id="backend"></select></label>
+      <label>FFmpeg source<select id="source"></select></label>
+    </section>
+    <section class="context-row"><div id="clip-context"></div><div id="export-context"></div></section>
+    <div id="comparison-results" class="results-area">
+    <section id="performance-panel" class="results-card">
+      <div class="section-heading"><div><p class="eyebrow">PERFORMANCE</p><h2 id="performance-title">Performance: Isolated</h2></div><span id="performance-count" class="pill"></span></div>
+      <p id="performance-note" class="muted"></p>
+      <details id="dovi-test-method" class="benchmark-method" hidden><summary>Dolby Vision test method <span id="dovi-method-status" class="method-status"></span></summary><p id="dovi-method-report" class="muted"></p><p>Dolby Vision carries dynamic metadata that changes from scene to scene, and a tone mapper has to follow those changes. A loop of one repeated frame keeps the metadata constant and leaves that work out. From our observations, the metadata changes in a way that matters for tone mapping on roughly 3 to 8% of the frames of typical content, around 5% in the middle, which is about once every 20 frames. Some content barely changes at all.</p><p>The test therefore takes eight frames from different scenes of the source and repeats each of them 20 times. The resulting 160-frame sequence loops with a metadata change every 20 frames. GPU frames are uploaded once before the loop and stay on the GPU. The sampling position, stride and frame counts are fixed in the workload configuration and are the same on every machine.</p><p>Each sample pairs the configured short and long runs, both containing whole 160-frame passes. Per-frame cost is <code>(long time − short time) / (long frames − short frames)</code>, and the result is the median of three valid pairs. The configured method stays fixed; a single-frame case is labelled accordingly.</p><p id="dovi-timing-policy-report" class="muted"></p></details>
+      <details id="isolated-test-method" class="benchmark-method" hidden><summary>Isolated test method</summary><p>The isolated test measures the tone mapper on its own, without decoding and encoding. Each run decodes the first frame of the original clip, applies any input conversion the filter requires once, and uploads GPU frames once. It then repeats that one prepared frame N times through the tone mapper. The output goes to the null muxer as wrapped frames: GPU frames stay on the GPU, and nothing is downloaded or encoded.</p><p>Each sample pairs a run with one frame and a run with N frames. Per-frame cost is <code>(time(N) - time(1)) / (N - 1)</code>; FPS is its inverse. The subtraction removes startup, decoding, upload and any one-time setup of the tone mapper. Duration is the wall time of the N-frame run, including those startup costs.</p><p>N is fixed for each case in <code>config/performance-workloads.json</code>. Every machine processes the same workload; previous results, calibration runs and measured speed do not change N. Clearing results leaves the workload configuration intact. Explicit frame-count overrides are recorded as custom comparisons.</p><p>The result is the best valid sample. Spread is <code>(max FPS - min FPS) / max FPS</code> across the valid samples. A repeated frame keeps its HDR metadata constant, so this test does not include the work of following changing dynamic metadata; Dolby Vision uses its eight-state method for that. Output conversions that a filter needs remain in the measured chain, for example the zscale steps around stock tonemap.</p></details>
+      <details id="transcode-test-method" class="benchmark-method" hidden><summary>Full transcode test method</summary><p>The full transcode test uses the fixed output frame count or media duration recorded for each case: decoding, tone mapping at native resolution, scaling to 720p and H.264 encoding. GPU routes keep frames on the GPU from decoder to encoder, without any upload or download: CUDA with NVENC, OpenCL with QSV on Intel or with AMF on AMD, and Vulkan with Vulkan Video. On AMD, Emby maps between AMF and OpenCL and scales with <code>vpp_amf</code>, like the Emby server; the other builds map between D3D11 and OpenCL and scale with <code>scale_d3d11</code>. Software filters decode in software and encode with libx264 <code>ultrafast</code>.</p><p>With one tone mapping pass per frame, fast GPU tone mappers are hidden behind the hardware decoder, and all of them end up at the decoder's limit. GPU routes therefore pass every decoded frame through tone mapping five times. <code>fps=source_fps*5</code> repeats each frame before it is mapped into the tone mapper's API, and <code>fps=source_fps/5</code> keeps one of the five after it is mapped back, right before the scaler. Mapping in, tone mapping and mapping back run five times per output frame; decoding, scaling and encoding run once. Software routes use a single pass.</p><p>FPS is output frames divided by FFmpeg's wall time. Mapped FPS counts the tone mapping passes: five times FPS on GPU routes, equal to FPS for software. Speed is output frames divided by the source frame rate and the wall time. Duration is the wall time of the run, and the result is the best valid sample.</p><p>Very fast tone mappers can still reach the limit of the decoder or encoder; their FPS is then a lower bound. Routes that a build cannot run, for example because its D3D11-to-OpenCL mapping is missing, are listed as failed or skipped with the native error rather than replaced by a software path.</p></details>
+      <div id="performance-table" class="table-scroll"><table><thead><tr><th>FFmpeg source</th><th>Filter</th><th>FPS</th><th id="mapped-heading" title="Frames through the tone mapper per second. Hardware routes pass every frame through mapping five times; software routes once.">Mapped FPS</th><th id="speed-heading">Speed</th><th>Duration</th><th class="bar-heading">Relative throughput</th></tr></thead><tbody id="performance-body"></tbody></table></div>
+      <div id="performance-empty" class="empty" hidden></div>
+    </section>
+    <section id="quality-panel" class="results-card" hidden>
+      <div class="section-heading"><div><p id="quality-eyebrow" class="eyebrow">QUALITY / LIBPLACEBO REFERENCE</p><h2 id="quality-title">A closer look</h2></div><div class="segmented" id="view-buttons"><button data-view="table" class="active">Table</button><button data-view="multi">Multi-image</button><button data-view="single">Single-image</button></div></div>
+      <div class="visibility-row"><fieldset class="filter-picker"><legend><span id="visibility-label">Visible filters</span><span class="filter-selection-actions"><button id="check-all-filters" type="button" aria-label="Check all visible filters" title="Check all"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2"></rect><path d="m4.5 8 2.5 2.5 4.5-5"></path></svg></button><button id="check-no-filters" type="button" aria-label="Uncheck all visible filters" title="Uncheck all"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2"></rect></svg></button></span></legend><div id="filter-picker"></div></fieldset><div class="layout-toggles"><label class="compact-toggle"><input id="compact-layout" type="checkbox">Compact layout</label><label class="compact-toggle"><input id="full-width" type="checkbox">Full width</label></div></div>
+      <div id="quality-toolbar" class="quality-toolbar"><label>Image series<select id="image-mode"><option value="original">Original</option><option value="signed">Signed difference</option><option value="absolute">Absolute difference</option></select></label><label id="absolute-gain-control" class="gain-control" hidden><span>Display gain <output id="gain-label">×8</output></span><input id="absolute-gain" type="range" min="1" max="32" step="1" value="8" aria-label="Difference display gain"></label><p id="image-explanation" class="muted"></p><div id="image-navigation" class="image-navigation"><button id="previous-image" type="button" aria-label="Previous keyframe" title="Previous keyframe">‹</button><button id="next-image" type="button" aria-label="Next keyframe" title="Next keyframe">›</button></div></div>
+      <div id="quality-empty" class="empty" hidden></div>
+      <div id="quality-content"></div>
+      <div id="timeline" class="timeline"><input id="time-slider" type="range" min="0" max="0" value="0" step="1" aria-label="Keyframe"><div class="timeline-labels"><span id="timeline-title">Keyframe</span><strong id="time-label"></strong><span id="frame-label"></span></div></div>
+      <p id="quality-note" class="muted quality-note">Metrics describe agreement with libplacebo. Every quality image uses native source dimensions.</p>
+    </section>
+    <details id="diagnostics" hidden><summary id="diagnostic-summary"></summary><div id="diagnostic-body"></div></details>
+    </div>
+    </div>
+    <section id="configuration-page" class="shell configuration-content" hidden aria-labelledby="configuration-title"><p class="eyebrow">SUITE SETTINGS</p><h1 id="configuration-title">Configuration</h1><div class="results-card"><h2>Filter capabilities</h2><p class="muted">Checkmarks show supported video signals. Runtime summaries refer to the latest exported reports.</p><div class="table-scroll"><table class="capabilities-table"><thead><tr><th>FFmpeg source</th><th>Filter</th><th>Processing</th><th class="signal-capability">HLG</th><th class="signal-capability">HDR10</th><th class="signal-capability">HDR10+</th><th class="signal-capability">Dolby Vision P5</th></tr></thead><tbody id="capabilities-body"></tbody></table></div></div><div class="results-card configuration-values"><h2>Current configuration</h2><div id="configuration-values"></div></div></section>
+  </main>
+  <dialog id="execution-dialog" aria-labelledby="execution-dialog-title">
+    <div class="dialog-heading"><h2 id="execution-dialog-title"></h2><button id="execution-dialog-close" type="button" aria-label="Close execution details">Close</button></div>
+    <div id="execution-dialog-body"></div>
+  </dialog>
+  <svg class="display-filter-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><defs id="display-filters"></defs></svg>
+  <footer class="site-footer"><div class="shell footer-inner"><span>Same source. Results you can reproduce.</span><span id="system-info"></span></div></footer>
+  <script src="results/results-data.js"></script>
+  <script src="viewer/app.js"></script>
+</body>
+</html>

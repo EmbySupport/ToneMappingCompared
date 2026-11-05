@@ -1,0 +1,23 @@
+
+### stock-ffmpeg.exe
+
+- Release: https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2026-09-27-13-04
+- URL: https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-27-13-04/ffmpeg-n9.0.2-12-gc867e13549-win64-gpl-9.0.zip
+
+### emby-ffmpeg.exe
+
+- Release: 2026.11.4.0
+- URL: 
+
+
+### jellyfin-ffmpeg.exe
+
+- Release: jellyfin-server-12.1
+- URL: https://nyc1.mirror.jellyfin.org/main/server/windows/latest-stable/amd64/jellyfin_12.1-amd64.zip
+
+
+### plex-transcoder.exe
+
+- Release: 1.43.4.10903-e5521bd8c
+
+- URL: https://downloads.plex.tv/plex-media-server-new/1.43.4.10903-e5521bd8c/windows/PlexMediaServer-1.43.4.10903-e5521bd8c-x86_64.exe

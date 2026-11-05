@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "binaries": {
+    "stock": {
+      "ffmpegPath": "bin/stock-ffmpeg.exe"
+    },
+    "emby": {
+      "ffmpegPath": "bin/emby-ffmpeg.exe"
+    },
+    "jellyfin": {
+      "ffmpegPath": "bin/jellyfin-ffmpeg.exe"
+    },
+    "plex": {
+      "ffmpegPath": "bin/plex/Plex Transcoder.exe"
+    }
+  },
+  "paths": {
+    "mediaPath": "media",
+    "tempOutputPath": "work",
+    "resultsPath": "results"
+  },
+  "devices": {
+    "vulkan": 0,
+    "cuda": 0,
+    "opencl": {
+      "platform": null,
+      "device": null,
+      "vendor": "intel"
+    },
+    "d3d11Adapter": null,
+    "performanceOpencl": {
+      "intel": {
+        "platform": null,
+        "device": null,
+        "d3d11Adapter": null
+      },
+      "amd": {
+        "platform": null,
+        "device": null,
+        "d3d11Adapter": null
+      }
+    }
+  },
+  "exclude": {
+    "software": false,
+    "intel": false,
+    "amd": false,
+    "nvidia": false
+  },
+  "benchmark": {
+    "filterThreads": 0,
+    "repetitions": 3,
+    "transcodeDurationSeconds": 30,
+    "processTimeoutSeconds": 300,
+    "keepOutputs": false
+  }
+}
